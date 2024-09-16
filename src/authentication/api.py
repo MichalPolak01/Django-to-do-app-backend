@@ -1,6 +1,6 @@
 from django.contrib.auth import authenticate
 from ninja_jwt.tokens import RefreshToken
-from ninja import Router
+from ninja import Router, Schema
 import json
 from ninja.errors import HttpError
 
@@ -38,3 +38,10 @@ def login(request, payload: SignInSchema):
         "refresh": str(refresh),
         "access": str(refresh.access_token),
     }
+
+class HelloResponse(Schema):
+    msg: str
+
+@router.get("/hello", response=HelloResponse)
+def hello(request):
+    return {"msg": "Hello World"}
