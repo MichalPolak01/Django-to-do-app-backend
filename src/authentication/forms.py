@@ -49,3 +49,74 @@ class UserCreateForm(forms.ModelForm):
             user.save()
 
         return user
+    
+
+class UserUpdateForm(forms.ModelForm):
+    class Meta:
+        model = CustomUser
+        fields = ["email", "first_name", "last_name"]
+
+    
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+
+        if CustomUser.objects.filter(email=email).exclude(pk=self.instance.pk).exists():
+            raise forms.ValidationError("This email is already in use.")
+        
+        return email
+    
+
+    def save(self, commit=True):
+        user = super(UserUpdateForm, self).save(commit=False)
+
+        if commit:
+            user.save()
+
+        return user
+    
+
+class PasswordChangeForm(forms.Form):
+    old_password = forms.CharField(widget=forms.PasswordInput())
+    new_password = forms.CharField(widget=forms.PasswordInput())
+
+    def __init__(self, user, *args, **kwargs):
+        self.user = user
+        super().__init__(*args, **kwargs)
+
+    
+    def clean_old_password(self):
+        old_password = self.cleaned_data.get('old_password')
+
+        if not self.user.check_password(old_password):
+            raise forms.ValidationError("Old password is incorrect.")
+        
+        return old_password
+    
+    def clean_new_password(self):
+        new_password = self.cleaned_data.get('new_password')
+
+        if len(new_password) < 8:
+            raise forms.ValidationError("Password must be at list 8 characters long.")
+        
+        if not re.search(r'[a-z]', new_password):
+            raise forms.ValidationError("Password must contain at list one lowercase letter.")
+        
+        if not re.search(r'[A-Z]', new_password):
+            raise forms.ValidationError("Password must contain at list one uppercase letter.")
+        
+        if not re.search(r'[0-9]', new_password):
+            raise forms.ValidationError("Password must contain at list one number.")
+        
+        if not re.search(r'[\W_]', new_password):
+            raise forms.ValidationError("Password must contain at list one special character.")
+
+        return new_password
+    
+
+    def save(self, commit=True):
+        self.user.set_password(self.cleaned_data['new_password'])
+
+        if commit:
+            self.user.save()
+
+        return self.user

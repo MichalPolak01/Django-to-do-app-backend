@@ -27,3 +27,23 @@ class UserEntryDetailsSchema(Schema):
 class SignInSchema(BaseModel):
     email: EmailStr
     password: str
+
+
+class UserEntryUpdateSchema(Schema):
+    email: EmailStr
+    first_name: str
+    last_name: str
+
+
+class PasswordChangeSchema(Schema):
+    old_password: str
+    new_password: str
+
+
+class ErrorPasswordChangeSchema(BaseModel):
+    old_password: Optional[List[Any]] = None
+    new_password: Optional[List[Any]] = None
+
+
+class MessageSchema(Schema):
+    message: str

@@ -4,8 +4,8 @@ from ninja import Router, Schema
 import json
 from ninja.errors import HttpError
 
-from .schemas import UserEntryCreateSchema, UserEntryDetailsSchema, ErrorUserEntryCreateSchema, SignInSchema
-from .forms import UserCreateForm
+from .schemas import UserEntryCreateSchema, UserEntryDetailsSchema, ErrorUserEntryCreateSchema, SignInSchema, UserEntryUpdateSchema, MessageSchema, PasswordChangeSchema, ErrorPasswordChangeSchema
+from .forms import UserCreateForm, UserUpdateForm, PasswordChangeForm
 import helpers
 
 
@@ -37,11 +37,38 @@ def login(request, payload: SignInSchema):
     return {
         "refresh": str(refresh),
         "access": str(refresh.access_token),
+        "username": user.first_name,
     }
 
-class HelloResponse(Schema):
-    msg: str
 
-@router.get("/hello", response=HelloResponse)
-def hello(request):
-    return {"msg": "Hello World"}
+@router.get("/user", response=UserEntryDetailsSchema, auth=helpers.api_auth_required)
+def get_user(request):
+    return request.user
+
+
+@router.post("/user/edit", response={200: UserEntryDetailsSchema, 400: ErrorUserEntryCreateSchema}, auth=helpers.api_auth_required)
+def edit_user(request, payload: UserEntryUpdateSchema):
+    user = request.user
+    form = UserUpdateForm(payload.dict(), instance=user)
+
+    if not form.is_valid():
+        form_errors = json.loads(form.errors.as_json())
+        return 400, form_errors
+    
+    obj = form.save()
+
+    return 200, obj
+
+
+@router.post("/user/change_password", response={200: MessageSchema, 400: ErrorPasswordChangeSchema}, auth=helpers.api_auth_required)
+def change_password(request, payload: PasswordChangeSchema):
+    user = request.user
+    form = PasswordChangeForm(user, data=payload.dict())
+
+    if not form.is_valid():
+        form_errors = json.loads(form.errors.as_json())
+        return 400, form_errors
+    
+    form.save()
+
+    return 200, {"message": "Password changed successfully"}
