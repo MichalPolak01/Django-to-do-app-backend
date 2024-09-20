@@ -5,7 +5,6 @@ from django.contrib.auth.hashers import make_password
 from .models import CustomUser
 
 
-
 class BaseUserForm(forms.ModelForm):
     """ Base form for common user validations """
 
