@@ -5,20 +5,26 @@ from django.contrib.auth.hashers import make_password
 from .models import CustomUser
 
 
-class UserCreateForm(forms.ModelForm):
+
+class BaseUserForm(forms.ModelForm):
+    """ Base form for common user validations """
+
     class Meta:
         model = CustomUser
-        fields = ['email', 'first_name', 'last_name', 'password']
+        fields = ['email', 'first_name', 'last_name']
 
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
 
-        if CustomUser.objects.filter(email=email).exists():
+        if CustomUser.objects.filter(email=email).exclude(pk=self.instance.pk).exists():
             raise forms.ValidationError("This email is already in use.")
         
         return email
-    
+
+
+class PasswordVaildationMixin:
+    """" Mixin for password validation logic """
 
     def clean_password(self):
         password = self.cleaned_data.get('password')
@@ -41,6 +47,12 @@ class UserCreateForm(forms.ModelForm):
         return password
     
 
+class UserCreateForm(BaseUserForm, PasswordVaildationMixin):
+    """ Form for creating user profile """
+
+    class Meta(BaseUserForm.Meta):
+        fields = BaseUserForm.Meta.fields + ['password']    
+
     def save(self, commit=True):
         user = super(UserCreateForm, self).save(commit=False)
         user.password = make_password(self.cleaned_data['password'])
@@ -51,20 +63,8 @@ class UserCreateForm(forms.ModelForm):
         return user
     
 
-class UserUpdateForm(forms.ModelForm):
-    class Meta:
-        model = CustomUser
-        fields = ["email", "first_name", "last_name"]
-
-    
-    def clean_email(self):
-        email = self.cleaned_data.get('email')
-
-        if CustomUser.objects.filter(email=email).exclude(pk=self.instance.pk).exists():
-            raise forms.ValidationError("This email is already in use.")
-        
-        return email
-    
+class UserUpdateForm(BaseUserForm):
+    """ Form for updating user profile (excluding password) """    
 
     def save(self, commit=True):
         user = super(UserUpdateForm, self).save(commit=False)
@@ -75,9 +75,11 @@ class UserUpdateForm(forms.ModelForm):
         return user
     
 
-class PasswordChangeForm(forms.Form):
+class PasswordChangeForm(forms.Form, PasswordVaildationMixin):
+    """ Form for updating user password """
+
     old_password = forms.CharField(widget=forms.PasswordInput())
-    new_password = forms.CharField(widget=forms.PasswordInput())
+    password = forms.CharField(widget=forms.PasswordInput())
 
     def __init__(self, user, *args, **kwargs):
         self.user = user
@@ -93,28 +95,11 @@ class PasswordChangeForm(forms.Form):
         return old_password
     
     def clean_new_password(self):
-        new_password = self.cleaned_data.get('new_password')
-
-        if len(new_password) < 8:
-            raise forms.ValidationError("Password must be at list 8 characters long.")
-        
-        if not re.search(r'[a-z]', new_password):
-            raise forms.ValidationError("Password must contain at list one lowercase letter.")
-        
-        if not re.search(r'[A-Z]', new_password):
-            raise forms.ValidationError("Password must contain at list one uppercase letter.")
-        
-        if not re.search(r'[0-9]', new_password):
-            raise forms.ValidationError("Password must contain at list one number.")
-        
-        if not re.search(r'[\W_]', new_password):
-            raise forms.ValidationError("Password must contain at list one special character.")
-
-        return new_password
+        return self.clean_password()
     
 
     def save(self, commit=True):
-        self.user.set_password(self.cleaned_data['new_password'])
+        self.user.set_password(self.cleaned_data['password'])
 
         if commit:
             self.user.save()

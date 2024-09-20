@@ -37,12 +37,12 @@ class UserEntryUpdateSchema(Schema):
 
 class PasswordChangeSchema(Schema):
     old_password: str
-    new_password: str
+    password: str
 
 
 class ErrorPasswordChangeSchema(BaseModel):
     old_password: Optional[List[Any]] = None
-    new_password: Optional[List[Any]] = None
+    password: Optional[List[Any]] = None
 
 
 class MessageSchema(Schema):
