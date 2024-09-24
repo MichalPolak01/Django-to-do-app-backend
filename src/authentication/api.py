@@ -1,18 +1,19 @@
 from django.contrib.auth import authenticate
 from ninja_jwt.tokens import RefreshToken
-from ninja import Router, Schema
+from ninja import Router
 import json
 from ninja.errors import HttpError
 
 from .schemas import UserEntryCreateSchema, UserEntryDetailsSchema, ErrorUserEntryCreateSchema, SignInSchema, UserEntryUpdateSchema, MessageSchema, PasswordChangeSchema, ErrorPasswordChangeSchema
 from .forms import UserCreateForm, UserUpdateForm, PasswordChangeForm
 import helpers
+from core.api import api
 
 
 router = Router()
 
 
-@router.post("/register", response = { 201: UserEntryDetailsSchema, 400: ErrorUserEntryCreateSchema }, auth=helpers.api_auth_not_required)
+@router.post("/register", response = { 201: UserEntryDetailsSchema, 400: ErrorUserEntryCreateSchema }, auth=helpers.api_auth_not_required, tags=["Authentication"])
 def register(request, payload: UserEntryCreateSchema):
     form = UserCreateForm(payload.dict())
 
@@ -25,7 +26,7 @@ def register(request, payload: UserEntryCreateSchema):
     return 201, obj
 
 
-@router.post("/login", auth=helpers.api_auth_not_required)
+@router.post("/login", auth=helpers.api_auth_not_required, tags=["Authentication"])
 def login(request, payload: SignInSchema):
     user = authenticate(request, email=payload.email, password=payload.password)
 
@@ -41,12 +42,12 @@ def login(request, payload: SignInSchema):
     }
 
 
-@router.get("/user", response=UserEntryDetailsSchema, auth=helpers.api_auth_required)
+@router.get("/user", response=UserEntryDetailsSchema, auth=helpers.api_auth_required, tags=["Authentication"])
 def get_user(request):
     return request.user
 
 
-@router.post("/user/edit", response={200: UserEntryDetailsSchema, 400: ErrorUserEntryCreateSchema}, auth=helpers.api_auth_required)
+@api.put("/user/edit", response={200: UserEntryDetailsSchema, 400: ErrorUserEntryCreateSchema}, auth=helpers.api_auth_required, tags=["Authentication"])
 def edit_user(request, payload: UserEntryUpdateSchema):
     user = request.user
     form = UserUpdateForm(payload.dict(), instance=user)
@@ -60,7 +61,7 @@ def edit_user(request, payload: UserEntryUpdateSchema):
     return 200, obj
 
 
-@router.post("/user/change_password", response={200: MessageSchema, 400: ErrorPasswordChangeSchema}, auth=helpers.api_auth_required)
+@api.put("/user/change_password", response={200: MessageSchema, 400: ErrorPasswordChangeSchema}, auth=helpers.api_auth_required, tags=["Authentication"])
 def change_password(request, payload: PasswordChangeSchema):
     user = request.user
     form = PasswordChangeForm(user, data=payload.dict())
