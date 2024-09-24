@@ -7,7 +7,6 @@ from ninja.errors import HttpError
 from .schemas import UserEntryCreateSchema, UserEntryDetailsSchema, ErrorUserEntryCreateSchema, SignInSchema, UserEntryUpdateSchema, MessageSchema, PasswordChangeSchema, ErrorPasswordChangeSchema
 from .forms import UserCreateForm, UserUpdateForm, PasswordChangeForm
 import helpers
-from core.api import api
 
 
 router = Router()
@@ -47,7 +46,7 @@ def get_user(request):
     return request.user
 
 
-@api.put("/user/edit", response={200: UserEntryDetailsSchema, 400: ErrorUserEntryCreateSchema}, auth=helpers.api_auth_required, tags=["Authentication"])
+@router.put("/user/edit", response={200: UserEntryDetailsSchema, 400: ErrorUserEntryCreateSchema}, auth=helpers.api_auth_required, tags=["Authentication"])
 def edit_user(request, payload: UserEntryUpdateSchema):
     user = request.user
     form = UserUpdateForm(payload.dict(), instance=user)
@@ -61,7 +60,7 @@ def edit_user(request, payload: UserEntryUpdateSchema):
     return 200, obj
 
 
-@api.put("/user/change_password", response={200: MessageSchema, 400: ErrorPasswordChangeSchema}, auth=helpers.api_auth_required, tags=["Authentication"])
+@router.put("/user/change_password", response={200: MessageSchema, 400: ErrorPasswordChangeSchema}, auth=helpers.api_auth_required, tags=["Authentication"])
 def change_password(request, payload: PasswordChangeSchema):
     user = request.user
     form = PasswordChangeForm(user, data=payload.dict())

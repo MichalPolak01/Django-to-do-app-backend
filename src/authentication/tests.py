@@ -108,7 +108,7 @@ class NinjaAuthenticationTestCase(TestCase):
     def test_successful_user_update(self):
         """ Test user profile update with valid credentials """
 
-        response = self.client.post("/user/edit",
+        response = self.client.put("/user/edit",
             json = {
                 "email": "testuser2@example.com",
                 "first_name": "Alice",
@@ -127,7 +127,7 @@ class NinjaAuthenticationTestCase(TestCase):
     def test_update_without_authorization(self):
         """ Test user profile update without authorization token """
 
-        response = self.client.post("/user/edit", json = {
+        response = self.client.put("/user/edit", json = {
             "email": "testuser2@example.com",
             "first_name": "Alice",
             "last_name": "Smith"
@@ -139,7 +139,7 @@ class NinjaAuthenticationTestCase(TestCase):
     def test_duplicate_email_update(self):
         """ Test user profile update with a duplicate email """
 
-        response = self.client.post("/user/edit",
+        response = self.client.put("/user/edit",
             json = {
                 "email": "testuser@example.com",
                 "first_name": "John",
@@ -156,7 +156,7 @@ class NinjaAuthenticationTestCase(TestCase):
     def test_successful_password_change(self):
         """ Test password change with valid credentials """
 
-        response = self.client.post("/user/change_password", 
+        response = self.client.put("/user/change_password", 
             json = {
                 "old_password": "TestPassword123#",
                 "password": "TestPassword123$"
@@ -173,7 +173,7 @@ class NinjaAuthenticationTestCase(TestCase):
     def test_failed_password_change_due_to_wrong_old_password(self):
         """ Test password change with an incorrect old password """
 
-        response = self.client.post("/user/change_password", 
+        response = self.client.put("/user/change_password", 
             json = {
                 "old_password": "WrongPassword123%",
                 "password": "TestPassword123$"
@@ -189,7 +189,7 @@ class NinjaAuthenticationTestCase(TestCase):
     def test_failed_password_change_due_to_invalid_new_password(self):
         """ Test password change with an invalid new password """
 
-        response = self.client.post("/user/change_password", 
+        response = self.client.put("/user/change_password", 
             json = {
                 "old_password": "TestPassword123#",
                 "password": "WrongPassword"
