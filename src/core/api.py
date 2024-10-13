@@ -7,6 +7,7 @@ api = NinjaExtraAPI()
 
 api.add_router("", "authentication.api.router")
 api.add_router("/task", "tasks.api.router")
+api.add_router("/task-generator",  "task_generator.api.router")
 
 
 
